@@ -7,13 +7,13 @@
 #include <linux/device.h>
 #include <linux/uaccess.h> /* copy_to_user() */
 
-static const char g_s_Hello_World_string[] = "Hello world from kernel mode!\n";
+static const char g_s_Hello_World_string[] = "Hello world from Raspberry Pi device driver!\n";
 static const ssize_t g_s_Hello_World_size = sizeof(g_s_Hello_World_string);
 
 static ssize_t device_file_read(
     struct file *file_ptr, char __user *user_buffer, size_t count, loff_t *position)
 {
-    pr_notice("Simple-driver: Read from device file offset = %i, read bytes count = %u\n", (int)*position, (unsigned int)count);
+    pr_notice("bastea-driver: Read from device file offset = %i, read bytes count = %u\n", (int)*position, (unsigned int)count);
 
     if (*position >= g_s_Hello_World_size)
         return 0;
@@ -34,8 +34,8 @@ static const struct file_operations simple_driver_fops =
     .read = device_file_read,
 };
 
-static const char device_name[] = "simple-driver";
-static const char class_name[] = "simple-driver-class";
+static const char device_name[] = "bastea-driver";
+static const char class_name[] = "bastea-driver-class";
 dev_t g_devno = 0;
 struct cdev g_cdev = {};
 static struct class *g_class = NULL;
@@ -45,14 +45,14 @@ int register_device(void)
 {
     int result = 0;
 
-    pr_notice("Simple-driver: register_device() is called.\n");
+    pr_notice("bastea-driver: register_device() is called.\n");
 
     unsigned baseminor = 0;
     unsigned minor_count_required = 1;
     result = alloc_chrdev_region(&g_devno, baseminor, minor_count_required, device_name);
     if (result)
     {
-        pr_err("Simple-driver: alloc_chrdev_region failed: %d\n", result);
+        pr_err("bastea-driver: alloc_chrdev_region failed: %d\n", result);
         goto err_out;
     }
 
@@ -61,7 +61,7 @@ int register_device(void)
     result = cdev_add(&g_cdev, g_devno, minor_count_required);
     if (result)
     {
-        pr_err("Simple-driver: cdev_add failed: %d\n", result);
+        pr_err("bastea-driver: cdev_add failed: %d\n", result);
         goto err_unregister_chrdev_region;
     }
 
@@ -69,7 +69,7 @@ int register_device(void)
     if (IS_ERR(g_class))
     {
         result = PTR_ERR(g_class);
-        pr_err("Simple-driver: class_create failed: %d\n", result);
+        pr_err("bastea-driver: class_create failed: %d\n", result);
         goto err_cdev_del;
     }
 
@@ -77,11 +77,11 @@ int register_device(void)
     if (IS_ERR(g_device))
     {
         result = PTR_ERR(g_device);
-        pr_err("Simple-driver: device_create failed: %d\n", result);
+        pr_err("bastea-driver: device_create failed: %d\n", result);
         goto err_class_destroy;
     }
 
-    pr_notice("Simple-driver: Registered character device with major number = %i, minor number = %i\n", MAJOR(g_devno), MINOR(g_devno));
+    pr_notice("bastea-driver: Registered character device with major number = %i, minor number = %i\n", MAJOR(g_devno), MINOR(g_devno));
     return 0;
 
 err_class_destroy:
@@ -108,7 +108,7 @@ err_out:
 
 void unregister_device(void)
 {
-    pr_notice("Simple-driver: unregister_device() is called\n");
+    pr_notice("bastea-driver: unregister_device() is called\n");
 
     if (!IS_ERR_OR_NULL(g_device))
     {
@@ -130,5 +130,5 @@ void unregister_device(void)
         unregister_chrdev_region(g_devno, minor_count_allocated);
         g_devno = 0;
     }
-    pr_info("Simple-driver: Unregistered\n");
+    pr_info("bastea-driver: Unregistered\n");
 }

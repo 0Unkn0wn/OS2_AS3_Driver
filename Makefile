@@ -1,4 +1,4 @@
-TARGET_MODULE:=simple-module
+TARGET_MODULE:=bastea-module
 
 # If we running by kernel building system
 ifneq ($(KERNELRELEASE),)
@@ -22,7 +22,7 @@ load:
 	insmod ./$(TARGET_MODULE).ko
 
 unload:
-	rmmod ./$(TARGET_MODULE).ko
+	rmmod $(TARGET_MODULE)
 
 endif
 
