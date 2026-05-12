@@ -22,7 +22,7 @@ load:
 	insmod ./$(TARGET_MODULE).ko
 
 unload:
-	rmmod $(TARGET_MODULE)
+	rmmod ./$(TARGET_MODULE).ko
 
 endif
 
