@@ -37,6 +37,7 @@
 #show: codly-init.with()
 #codly(languages: codly-languages)
 #codly(number-format: none)
+#show figure: set block(breakable: true)
 
 = Introduction
 
