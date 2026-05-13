@@ -6,33 +6,12 @@
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/uaccess.h> /* copy_to_user() */
+#include <linux/string.h>
+#include <linux/mutex.h>
+#define BUFFER_SIZE 256
 
-static const char g_s_Hello_World_string[] = "Hello world from Raspberry Pi device driver!\n";
-static const ssize_t g_s_Hello_World_size = sizeof(g_s_Hello_World_string);
-
-static ssize_t device_file_read(
-    struct file *file_ptr, char __user *user_buffer, size_t count, loff_t *position)
-{
-    pr_notice("bastea-driver: Read from device file offset = %i, read bytes count = %u\n", (int)*position, (unsigned int)count);
-
-    if (*position >= g_s_Hello_World_size)
-        return 0;
-
-    if (*position + count > g_s_Hello_World_size)
-        count = g_s_Hello_World_size - *position;
-
-    if (copy_to_user(user_buffer, g_s_Hello_World_string + *position, count) != 0)
-        return -EFAULT;
-
-    *position += count;
-    return count;
-}
-
-static const struct file_operations simple_driver_fops =
-{
-    .owner = THIS_MODULE,
-    .read = device_file_read,
-};
+static char device_buffer[BUFFER_SIZE] = "Hello world from Raspberry Pi device driver!\n";
+static DEFINE_MUTEX(buffer_lock);
 
 static const char device_name[] = "bastea-driver";
 static const char class_name[] = "bastea-driver-class";
@@ -40,6 +19,65 @@ dev_t g_devno = 0;
 struct cdev g_cdev = {};
 static struct class *g_class = NULL;
 static struct device *g_device = NULL;
+
+static ssize_t device_file_read(struct file *file_ptr, char __user *user_buffer, size_t count, loff_t *position){
+    size_t buffer_size;
+
+    pr_notice("bastea-driver: Read from device file offset = %i, read bytes count = %u\n", (int)*position, (unsigned int)count);
+
+    mutex_lock(&buffer_lock);
+
+    buffer_size = strlen(device_buffer);
+
+    if (*position >= buffer_size) {
+        mutex_unlock(&buffer_lock);
+        return 0;
+    }
+
+    if (*position + count > buffer_size)
+        count = buffer_size - *position;
+
+    if (copy_to_user(user_buffer, device_buffer + *position, count) != 0) {
+        mutex_unlock(&buffer_lock);
+        return -EFAULT;
+    }
+
+    *position += count;
+
+    mutex_unlock(&buffer_lock);
+
+    return count;
+}
+
+static ssize_t device_file_write(struct file *file_ptr, const char __user *user_buffer, size_t count, loff_t *position){
+    size_t bytes_to_copy;
+
+    pr_notice("bastea-driver: Write to device file, bytes count = %u\n", (unsigned int)count);
+
+    bytes_to_copy = min(count, (size_t)(BUFFER_SIZE - 1));
+
+    mutex_lock(&buffer_lock);
+
+    memset(device_buffer, 0, BUFFER_SIZE);
+
+    if (copy_from_user(device_buffer, user_buffer, bytes_to_copy) != 0) {
+        mutex_unlock(&buffer_lock);
+        return -EFAULT;
+    }
+
+    device_buffer[bytes_to_copy] = '\0';
+
+    mutex_unlock(&buffer_lock);
+
+    return bytes_to_copy;
+}
+
+static const struct file_operations simple_driver_fops =
+{
+    .owner = THIS_MODULE,
+    .read = device_file_read,
+    .write = device_file_write,
+};
 
 int register_device(void)
 {
