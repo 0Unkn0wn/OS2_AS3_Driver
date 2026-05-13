@@ -72,7 +72,7 @@ static ssize_t device_file_write(struct file *file_ptr, const char __user *user_
     return bytes_to_copy;
 }
 
-static const struct file_operations simple_driver_fops =
+static const struct file_operations bastea_driver_fops =
 {
     .owner = THIS_MODULE,
     .read = device_file_read,
@@ -94,7 +94,7 @@ int register_device(void)
         goto err_out;
     }
 
-    cdev_init(&g_cdev, &simple_driver_fops);
+    cdev_init(&g_cdev, &bastea_driver_fops);
     g_cdev.owner = THIS_MODULE;
     result = cdev_add(&g_cdev, g_devno, minor_count_required);
     if (result)
