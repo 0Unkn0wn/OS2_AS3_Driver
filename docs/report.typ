@@ -430,7 +430,7 @@ caption: [Compiling and running the read/write test program.]
 
 ```bash
 $ gcc read_write_test.c -o read_write_test
-$ sudo ./read_write_test
+$ ./read_write_test
 
 Initial buffer contents:
 Hello world from Raspberry Pi device driver!
