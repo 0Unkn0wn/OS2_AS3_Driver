@@ -15,21 +15,21 @@ sudo make load
 ## Check if the driver loaded correctly
 
 ```bash
-lsmod | grep changeme
+lsmod | grep bastea
 dmesg | tail
-ls -l /dev/changeme-driver
+ls -l /dev/bastea-driver
 ```
 
 ## Read from the driver
 
 ```bash
-sudo cat /dev/changeme-driver
+sudo cat /dev/bastea-driver
 ```
 
 ## Write to the driver
 
 ```bash
-echo "Hello from userspace" | sudo tee /dev/changeme-driver
+echo "Hello from userspace" | sudo tee /dev/bastea-driver
 ```
 
 ## Reload the driver after modifications
