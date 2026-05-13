@@ -79,6 +79,13 @@ static const struct file_operations bastea_driver_fops =
     .write = device_file_write,
 };
 
+
+static int device_uevent(const struct device *dev, struct kobj_uevent_env *env)
+{
+    add_uevent_var(env, "DEVMODE=%#o", 0666);
+    return 0;
+}
+
 int register_device(void)
 {
     int result = 0;
@@ -110,6 +117,7 @@ int register_device(void)
         pr_err("bastea-driver: class_create failed: %d\n", result);
         goto err_cdev_del;
     }
+    g_class->dev_uevent = device_uevent;
 
     g_device = device_create(g_class, NULL, g_devno, NULL, device_name);
     if (IS_ERR(g_device))

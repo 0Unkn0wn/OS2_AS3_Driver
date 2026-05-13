@@ -326,6 +326,41 @@ static const struct file_operations bastea_driver_fops =
 
 This makes it possible to write new data to the device file from user space and read the updated contents back afterwards.
 
+The device driver was also extended so the device file is automatically created with read and write permissions for all users. This removes the need to use `sudo` when accessing the driver through commands such as `cat` or `echo`.
+
+The permissions are configured through a custom `dev_uevent` handler attached to the device class.
+
+#figure(
+caption: [Custom device permissions.]
+)[
+
+```c
+static int device_uevent(const struct device *dev, struct kobj_uevent_env *env)
+{
+    add_uevent_var(env, "DEVMODE=%#o", 0666);
+    return 0;
+}
+
+g_class->dev_uevent = device_uevent;
+```
+
+]
+
+After loading the module, the device file is automatically created with read and write permissions for all users.
+
+#figure(
+caption: [Device file permissions.]
+)[
+
+```bash
+$ ls -l /dev/bastea-driver
+
+crw-rw-rw- 1 root root ...
+```
+
+]
+
+
 To test the extended functionality, a separate C test program was created. The program first reads the initial contents of the device buffer, then writes a new message to the driver and finally reads the updated contents again.
 
 #figure(
